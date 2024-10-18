@@ -9,6 +9,7 @@ load_dotenv()
 
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+MODEL = os.getenv("MODEL")
 
 client = Groq(
     api_key=GROQ_API_KEY 
@@ -26,11 +27,15 @@ def groq_llm_api_call(prompt):
     chat_completion = client.chat.completions.create(
         messages=[
             {
+                "role": "system",
+                "content": "You reply in 50 words or less in the language the user sends you."
+            },
+            {
                 "role": "user",
                 "content": prompt,
             }
         ],
-        model="mixtral-8x7b-32768",
+        model=MODEL,
     )
     return chat_completion.choices[0].message.content
 
