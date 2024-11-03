@@ -1,4 +1,5 @@
 import os
+import argparse
 from dotenv import load_dotenv
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
@@ -36,7 +37,7 @@ def create_db_connection():
         return None
 
 # Log conversation to PostgreSQL
-def log_conversation_to_db(prompt, response):
+def log_conversation_to_db(username, prompt, response):
     conn = create_db_connection()
     if conn is None:
         print("Could not connect to database.")
@@ -45,7 +46,7 @@ def log_conversation_to_db(prompt, response):
         with conn.cursor() as cursor:
             cursor.execute(
                 "INSERT INTO conversations (username, prompt, response, created_at) VALUES (%s, %s, %s, %s)",
-                ('s0288', prompt, response, datetime.now())
+                (username, prompt, response, datetime.now())
             )
             conn.commit()
     except Exception as e:
@@ -70,7 +71,7 @@ def groq_llm_api_call(conversation_history):
     return chat_completion.choices[0].message.content
 
 # Main chat function with history
-def chat_with_groq_llm():
+def chat_with_groq_llm(username):
     session = PromptSession(history=InMemoryHistory())
     style = Style.from_dict({
         'prompt': 'ansicyan bold',  # Prompt color/style
@@ -115,7 +116,7 @@ def chat_with_groq_llm():
 
             # Log conversation in the database if logging is enabled
             if logging_enabled:
-                log_conversation_to_db(prompt, response)
+                log_conversation_to_db(username, prompt, response)
 
             # Add response to conversation history
             conversation_history.append({"role": "assistant", "content": response})
@@ -125,6 +126,9 @@ def chat_with_groq_llm():
             break
 
 if __name__ == "__main__":
-    chat_with_groq_llm()
+    parser = argparse.ArgumentParser(description="Chat with Groq LLM and log conversations.")
+    parser.add_argument('-u', '--user', required=True, help="Specify the username for logging")
+    args = parser.parse_args()
 
+    chat_with_groq_llm(args.user)
 
