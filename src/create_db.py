@@ -1,5 +1,6 @@
 # create stmts for db
 import os
+
 import psycopg2
 from dotenv import load_dotenv
 
@@ -31,7 +32,7 @@ def create_table():
             user=POSTGRES_USER,
             password=POSTGRES_PW,
             host=POSTGRES_HOST,
-            port=POSTGRES_PORT
+            port=POSTGRES_PORT,
         )
         # Create a cursor and execute the table creation
         with conn.cursor() as cursor:
@@ -44,6 +45,6 @@ def create_table():
         if conn:
             conn.close()
 
+
 if __name__ == "__main__":
     create_table()
-
