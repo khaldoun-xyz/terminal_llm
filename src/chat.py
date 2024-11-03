@@ -85,13 +85,24 @@ def chat_with_groq_llm():
         }
     ]
 
-    print("Welcome to Groq LLM Chat! Type 'exit' to quit.\n")
+    # Set logging flag
+    logging_enabled = False
+
+    print("Welcome to Groq LLM Chat! Type 'exit' to quit, 'start evaluation' to begin logging, or 'stop evaluation' to stop logging.\n")
     while True:
         try:
             prompt = session.prompt('You: ')
-            if prompt.lower() in ['exit', 'quit']:
+            if prompt.lower() == 'exit':
                 print("Exiting Groq LLM Chat. Goodbye!")
                 break
+            elif prompt.lower() == 'start evaluation':
+                logging_enabled = True
+                print("Evaluation logging started.")
+                continue
+            elif prompt.lower() == 'stop evaluation':
+                logging_enabled = False
+                print("Evaluation logging stopped.")
+                continue
 
             # Add user message to the conversation history
             conversation_history.append({"role": "user", "content": prompt})
@@ -102,8 +113,9 @@ def chat_with_groq_llm():
             # Display response
             print(f"\033[92mGroq LLM: {response}\033[0m\n")  # Using ANSI for colors
 
-            # Log conversation in the database
-            log_conversation_to_db(prompt, response)
+            # Log conversation in the database if logging is enabled
+            if logging_enabled:
+                log_conversation_to_db(prompt, response)
 
             # Add response to conversation history
             conversation_history.append({"role": "assistant", "content": response})
@@ -114,4 +126,5 @@ def chat_with_groq_llm():
 
 if __name__ == "__main__":
     chat_with_groq_llm()
+
 
