@@ -53,37 +53,38 @@ def log_conversation_to_db(prompt, response):
     finally:
         conn.close()
 
-# Function to get response from Groq
-def get_groq_response(prompt):
+# Function to get response from Groq, using conversation history
+def get_groq_response(conversation_history):
     try:
-        response = groq_llm_api_call(prompt)
+        response = groq_llm_api_call(conversation_history)
         return response.strip()
     except Exception as e:
         return f"Error: {e}"
 
-def groq_llm_api_call(prompt):
+# API call with conversation history
+def groq_llm_api_call(conversation_history):
     chat_completion = client.chat.completions.create(
-        messages=[
-            {
-                "role": "system",
-                "content": "You reply in 50 words or less in the language the user sends you."
-            },
-            {
-                "role": "user",
-                "content": prompt,
-            }
-        ],
+        messages=conversation_history,
         model=MODEL,
     )
     return chat_completion.choices[0].message.content
 
-# Main chat function
+# Main chat function with history
 def chat_with_groq_llm():
     session = PromptSession(history=InMemoryHistory())
     style = Style.from_dict({
         'prompt': 'ansicyan bold',  # Prompt color/style
         'response': 'ansigreen',    # Response color/style
     })
+
+    # Initialize conversation history
+    conversation_history = [
+        {
+            "role": "system",
+            "content": "You reply in 50 words or less in the language the user sends you."
+        }
+    ]
+
     print("Welcome to Groq LLM Chat! Type 'exit' to quit.\n")
     while True:
         try:
@@ -91,9 +92,22 @@ def chat_with_groq_llm():
             if prompt.lower() in ['exit', 'quit']:
                 print("Exiting Groq LLM Chat. Goodbye!")
                 break
-            response = get_groq_response(prompt)
+
+            # Add user message to the conversation history
+            conversation_history.append({"role": "user", "content": prompt})
+
+            # Get response from Groq LLM
+            response = get_groq_response(conversation_history)
+
+            # Display response
             print(f"\033[92mGroq LLM: {response}\033[0m\n")  # Using ANSI for colors
-            log_conversation_to_db(prompt, response)  # Log the conversation to PostgreSQL
+
+            # Log conversation in the database
+            log_conversation_to_db(prompt, response)
+
+            # Add response to conversation history
+            conversation_history.append({"role": "assistant", "content": response})
+
         except (EOFError, KeyboardInterrupt):
             print("\nExiting Groq LLM Chat. Goodbye!")
             break
