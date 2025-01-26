@@ -1,60 +1,20 @@
-import argparse
 import os
 from datetime import datetime
 
-import psycopg2
-from dotenv import load_dotenv
+from dotenv import load_dotenv  # Ensure this import is here
 from groq import Groq
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import InMemoryHistory
 from prompt_toolkit.styles import Style
 
+# Load environment variables from .env file
 load_dotenv()
 
 # Load environment variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 MODEL = os.getenv("MODEL")
-POSTGRES_DB = os.getenv("POSTGRES_DB")
-POSTGRES_USER = os.getenv("POSTGRES_USER")
-POSTGRES_PW = os.getenv("POSTGRES_PW")
-POSTGRES_HOST = os.getenv("POSTGRES_HOST")
-POSTGRES_PORT = os.getenv("POSTGRES_PORT")
 
 client = Groq(api_key=GROQ_API_KEY)
-
-# Connect to PostgreSQL
-def create_db_connection():
-    try:
-        conn = psycopg2.connect(
-            dbname=POSTGRES_DB,
-            user=POSTGRES_USER,
-            password=POSTGRES_PW,
-            host=POSTGRES_HOST,
-            port=POSTGRES_PORT,
-        )
-        return conn
-    except Exception as e:
-        print(f"Error connecting to database: {e}")
-        return None
-
-
-# Log conversation to PostgreSQL
-def log_conversation_to_db(username, prompt, response):
-    conn = create_db_connection()
-    if conn is None:
-        print("Could not connect to database.")
-        return
-    try:
-        with conn.cursor() as cursor:
-            cursor.execute(
-                "INSERT INTO conversations (username, prompt, response, created_at) VALUES (%s, %s, %s, %s)",
-                (username, prompt, response, datetime.now()),
-            )
-            conn.commit()
-    except Exception as e:
-        print(f"Error logging conversation: {e}")
-    finally:
-        conn.close()
 
 
 # Function to get response from Groq, using conversation history
@@ -76,7 +36,7 @@ def groq_llm_api_call(conversation_history):
 
 
 # Main chat function with history
-def chat_with_groq_llm(username):
+def chat_with_groq_llm():
     session = PromptSession(history=InMemoryHistory())
     style = Style.from_dict(
         {
@@ -123,10 +83,6 @@ def chat_with_groq_llm(username):
             # Display response
             print(f"\033[92mGroq LLM: {response}\033[0m\n")  # Using ANSI for colors
 
-            # Log conversation in the database if logging is enabled
-            if logging_enabled:
-                log_conversation_to_db(username, prompt, response)
-
             # Add response to conversation history
             conversation_history.append({"role": "assistant", "content": response})
 
@@ -136,12 +92,4 @@ def chat_with_groq_llm(username):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Chat with Groq LLM and log conversations."
-    )
-    parser.add_argument(
-        "-u", "--user", required=True, help="Specify the username for logging"
-    )
-    args = parser.parse_args()
-
-    chat_with_groq_llm(args.user)
+    chat_with_groq_llm()
