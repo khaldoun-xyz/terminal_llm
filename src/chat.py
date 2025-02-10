@@ -53,11 +53,8 @@ def chat_with_groq_llm():
         }
     ]
 
-    # Set logging flag
-    logging_enabled = False
-
     print(
-        "Welcome to Groq LLM Chat! Type 'exit' to quit, 'start evaluation' to begin logging, or 'stop evaluation' to stop logging.\n"
+        "Welcome to Groq LLM Chat! Type 'exit' to quit.\n"
     )
     while True:
         try:
@@ -65,14 +62,6 @@ def chat_with_groq_llm():
             if prompt.lower() == "exit":
                 print("Exiting Groq LLM Chat. Goodbye!")
                 break
-            elif prompt.lower() == "start evaluation":
-                logging_enabled = True
-                print("Evaluation logging started.")
-                continue
-            elif prompt.lower() == "stop evaluation":
-                logging_enabled = False
-                print("Evaluation logging stopped.")
-                continue
 
             # Add user message to the conversation history
             conversation_history.append({"role": "user", "content": prompt})
